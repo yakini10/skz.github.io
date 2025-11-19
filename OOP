@@ -1,0 +1,60 @@
+import java.util.ArrayList;
+import java.util.Comparator;
+
+//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+public class Main {
+    public static void main(String[] args) {
+        ArrayList<Book> books = new ArrayList<>();
+        books.add(new Book("L'enfant noir", "Camara Laye", "roman", 1998, 214, 4.8));
+        books.add(new Book("Le monde s'effondre", "Chinua Achebe", "fiction", 1964, 190, 4));
+        books.add(new Book("L'aventure ambigue", "Cheikh Hamidou Kane", "roman", 2001, 300, 3));
+        books.add(new Book("CAhier d'un retour au pays natal", "Aime Cesaire", "Roman", 2005, 245, 4.9));
+        books.add(new Book("Ville cruelle", "Eza Boto", "histoire", 1967, 512, 3.8));
+        books.add(new Book("Une si longue lettre", "Mariama Ba", "Poesie", 1985, 213, 4));
+        books.add(new Book("Le pagne noir", "Bernard Dadie", "Poesie", 1955, 650, 5));
+        books.add(new Book("Les comptes d'Amadou Koumba", "Birago Diop", "Fables", 1947, 238, 4.9));
+        //tri simples
+        System.out.println("Tri par titre ");
+        books.sort(Comparator.comparing(Book::getTitle));
+        books.forEach(System.out::println);
+        System.out.println("Tri par auteur ");
+        books.sort(Comparator.comparing(Book::getAuthor));
+        books.forEach(System.out::println);
+        System.out.println("Tri par annee ");
+        books.sort(Comparator.comparing(Book::getPages).reversed());
+        books.forEach(System.out::println);
+        System.out.println("Tri par appreciation ");
+        books.sort(Comparator.comparing(Book::getRating).reversed());
+        books.forEach(System.out::println);
+        //tri composes
+        books.sort(Comparator.comparing(Book::getGenre).thenComparing(Book::getRating), Comparator.reserveOrder() );
+    }
+}
+
+
+
+public class Book {
+    private String title,author,genre;
+    private int year,pages;
+    private double rating;
+    Book(String title,String author,String genre, int year,int pages,double rating){
+        this.author=author;
+        this.title=title;
+        this.genre=genre;
+        this.year=year;
+        this.pages=pages;
+        this.rating=rating;
+    }
+    String getTitle() {return title;}
+    String getAuthor() {return author;}
+    String getGenre() {return genre;}
+    int getYear() {return year;}
+    int getPages() {return pages;}
+    double getRating() {return rating;}
+    @Override
+    public String toString(){
+        return "Nom du livre "+title+"\n auteur "+author+"\n l'annee de publication "+year+"\n Dans la categorie "+genre+"\n nombre de pages "+pages+"\nAppreciation "+rating;
+    }
+
+}
