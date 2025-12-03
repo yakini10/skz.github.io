@@ -1,0 +1,112 @@
+// Classe de base : Employe
+class Employe {
+    protected String nom;        // Nom de l'employé
+    protected String prenom;     // Prénom de l'employé
+
+    // Constructeur
+    public Employe(String nom, String prenom) {
+        this.nom = nom;
+        this.prenom = prenom;
+    }
+
+    // Méthode pour afficher les informations de base
+    public void afficherInfos() {
+        System.out.println("Nom : " + nom + ", Prénom : " + prenom);
+    }
+
+    // Méthode pour calculer le salaire (sera redéfinie dans les classes filles)
+    public double calculerSalaire() {
+        return 0.0;
+    }
+}
+
+// ==============================
+// Employé payé à l’heure
+class EmployeHoraire extends Employe {
+    private double tauxHoraire;
+    private int heuresTravaillees;
+
+    public EmployeHoraire(String nom, String prenom, double tauxHoraire, int heuresTravaillees) {
+        super(nom, prenom);
+        this.tauxHoraire = tauxHoraire;
+        this.heuresTravaillees = heuresTravaillees;
+    }
+
+    @Override
+    public double calculerSalaire() {
+        return tauxHoraire * heuresTravaillees;
+    }
+
+    @Override
+    public void afficherInfos() {
+        super.afficherInfos();
+        System.out.println("Type : Employé à l'heure");
+        System.out.println("Taux horaire : " + tauxHoraire + " €");
+        System.out.println("Heures travaillées : " + heuresTravaillees);
+        System.out.println("Salaire : " + calculerSalaire() + " €\n");
+    }
+}
+
+// ==============================
+// Employé avec un salaire fixe
+class EmployeSalarie extends Employe {
+    private double salaireMensuel;
+
+    public EmployeSalarie(String nom, String prenom, double salaireMensuel) {
+        super(nom, prenom);
+        this.salaireMensuel = salaireMensuel;
+    }
+
+    @Override
+    public double calculerSalaire() {
+        return salaireMensuel;
+    }
+
+    @Override
+    public void afficherInfos() {
+        super.afficherInfos();
+        System.out.println("Type : Employé salarié");
+        System.out.println("Salaire mensuel : " + salaireMensuel + " €\n");
+    }
+}
+
+// ==============================
+// Employé à commission
+class EmployeCommission extends Employe {
+    private double ventes;       // montant des ventes réalisées
+    private double tauxCommission; // pourcentage de commission
+
+    public EmployeCommission(String nom, String prenom, double ventes, double tauxCommission) {
+        super(nom, prenom);
+        this.ventes = ventes;
+        this.tauxCommission = tauxCommission;
+    }
+
+    @Override
+    public double calculerSalaire() {
+        return ventes * (tauxCommission / 100);
+    }
+
+    @Override
+    public void afficherInfos() {
+        super.afficherInfos();
+        System.out.println("Type : Employé à commission");
+        System.out.println("Ventes : " + ventes + " €");
+        System.out.println("Taux de commission : " + tauxCommission + " %");
+        System.out.println("Salaire : " + calculerSalaire() + " €\n");
+    }
+}
+
+// ==============================
+// Classe principale (pour tester)
+public class Main {
+    public static void main(String[] args) {
+        EmployeHoraire e1 = new EmployeHoraire("Dupont", "Marie", 15.5, 160);
+        EmployeSalarie e2 = new EmployeSalarie("Martin", "Luc", 2200);
+        EmployeCommission e3 = new EmployeCommission("Durand", "Paul", 10000, 5);
+
+        e1.afficherInfos();
+        e2.afficherInfos();
+        e3.afficherInfos();
+    }
+}
