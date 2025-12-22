@@ -1,0 +1,251 @@
+Теме Аиссата Дите Якине МО21/1
+Вариант 2
+Задача 1
+1. Создание таблиц
+CREATE TABLE Student (
+    id_student NUMBER PRIMARY KEY,
+    fullname VARCHAR2(200) NOT NULL,
+    gradebook_no NUMBER NOT NULL,
+    date_in DATE NOT NULL
+);
+
+CREATE TABLE Subject (
+    id_sub NUMBER PRIMARY KEY,
+    name VARCHAR2(100) NOT NULL,
+    type VARCHAR2(10) NOT NULL CHECK (type IN ('лк', 'лб'))
+);
+
+CREATE TABLE Group_table (
+    id_group NUMBER PRIMARY KEY,
+    group_no VARCHAR2(20) NOT NULL,
+    course NUMBER NOT NULL CHECK (course BETWEEN 1 AND 10),
+    year NUMBER NOT NULL
+);
+
+CREATE TABLE Structure_group (
+    id_structure NUMBER PRIMARY KEY,
+    id_student NUMBER NOT NULL,
+    id_group NUMBER NOT NULL,
+    
+    FOREIGN KEY (id_student) REFERENCES Student(id_student),
+    FOREIGN KEY (id_group) REFERENCES Group_table(id_group)
+);
+
+CREATE TABLE Schedule (
+    id_schedule NUMBER PRIMARY KEY,
+    id_group NUMBER NOT NULL,
+    id_sub NUMBER NOT NULL,
+    class_no NUMBER NOT NULL CHECK (class_no BETWEEN 1 AND 10),
+    classroom_no VARCHAR2(20) NOT NULL,
+    weekday VARCHAR2(20) NOT NULL,
+    
+    FOREIGN KEY (id_group) REFERENCES Group_table(id_group),
+    FOREIGN KEY (id_sub) REFERENCES Subject(id_sub)
+);
+
+2. Заполнение таблиц 
+-Студенты
+INSERT INTO Student (id_student, fullname, gradebook_no, date_in) 
+VALUES (1, 'Иванов Иван Иванович', 123456, DATE '2023-09-01');
+
+INSERT INTO Student (id_student, fullname, gradebook_no, date_in) 
+VALUES (2, 'Петрова Анна Сергеевна', 123457, DATE '2023-09-01');
+
+INSERT INTO Student (id_student, fullname, gradebook_no, date_in) 
+VALUES (3, 'Сидоров Алексей Петрович', 123458, DATE '2023-09-01');
+
+-Предметы
+INSERT INTO Subject (id_sub, name, type) 
+VALUES (1, 'Математика', 'лк');
+
+INSERT INTO Subject (id_sub, name, type) 
+VALUES (2, 'Физика', 'лб');
+
+INSERT INTO Subject (id_sub, name, type) 
+VALUES (3, 'Информатика', 'лк');
+
+-Группы
+INSERT INTO Group_table (id_group, group_no, course, year) 
+VALUES (1, 'МО-21/1', 2, 2023);
+
+INSERT INTO Group_table (id_group, group_no, course, year) 
+VALUES (2, 'МО-21/2', 2, 2023);
+
+INSERT INTO Group_table (id_group, group_no, course, year) 
+VALUES (3, 'МО-22/1', 1, 2023);
+
+- Состав групп
+INSERT INTO Structure_group (id_structure, id_student, id_group) 
+VALUES (1, 1, 1);
+
+INSERT INTO Structure_group (id_structure, id_student, id_group) 
+VALUES (2, 2, 1);
+
+INSERT INTO Structure_group (id_structure, id_student, id_group) 
+VALUES (3, 3, 2);
+
+- Расписание
+INSERT INTO Schedule (id_schedule, id_group, id_sub, class_no, classroom_no, weekday) 
+VALUES (1, 1, 1, 1, 'ауд. 101', 'Понедельник');
+
+INSERT INTO Schedule (id_schedule, id_group, id_sub, class_no, classroom_no, weekday) 
+VALUES (2, 1, 2, 2, 'лаб. 205', 'Вторник');
+
+INSERT INTO Schedule (id_schedule, id_group, id_sub, class_no, classroom_no, weekday) 
+VALUES (3, 2, 3, 3, 'ауд. 301', 'Среда');
+
+3. Проверка заполнения
+SELECT * FROM Student;
+SELECT * FROM Subject;
+SELECT * FROM Group_table;
+SELECT * FROM Structure_group;
+SELECT * FROM Schedule;
+
+4. Удаление записей
+DELETE FROM Schedule;
+DELETE FROM Structure_group;
+DELETE FROM Group_table;
+DELETE FROM Subject;
+DELETE FROM Student;
+
+5. Проверка удаления
+SELECT COUNT(*) as Student_rows FROM Student;
+SELECT COUNT(*) as Subject_rows FROM Subject;
+SELECT COUNT(*) as Group_rows FROM Group_table;
+SELECT COUNT(*) as Structure_rows FROM Structure_group;
+SELECT COUNT(*) as Schedule_rows FROM Schedule;
+Задача 2
+
+1. Вывести имя, фамилию, дату приема, зарплату и комиссионные 
+- для сотрудников, нанятых после 22.10.2005
+SELECT 
+    first_name,
+    last_name,
+    hire_date,
+    salary,
+    commission_pct
+FROM employees
+WHERE hire_date > DATE '2005-10-22'
+ORDER BY hire_date;
+
+2. Вывести фамилии, должности и департаменты для программистов в Саутлейк
+SELECT 
+    e.last_name,
+    j.job_title,
+    d.department_name
+FROM employees e
+JOIN jobs j ON e.job_id = j.job_id
+JOIN departments d ON e.department_id = d.department_id
+JOIN locations l ON d.location_id = l.location_id
+WHERE j.job_title = 'Programmer'
+  AND l.city = 'Southlake';
+
+3. Для каждого города определить количество департаментов
+SELECT 
+    l.city,
+    COUNT(d.department_id) as department_count
+FROM locations l
+JOIN departments d ON l.location_id = d.location_id
+GROUP BY l.city
+HAVING COUNT(d.department_id) > 1
+ORDER BY department_count DESC;
+
+4. Вывести руководителей, нанятых позднее своих подчиненных
+SELECT DISTINCT m.*
+FROM employees m
+WHERE m.employee_id IN (
+    SELECT DISTINCT manager_id 
+    FROM employees 
+    WHERE manager_id IS NOT NULL
+)
+AND EXISTS (
+    SELECT 1
+    FROM employees e
+    WHERE e.manager_id = m.employee_id
+      AND e.hire_date < m.hire_date
+)
+ORDER BY m.employee_id;
+Задача 3, Вариант 2
+- Создаем таблицы по схеме из рисунка
+CREATE TABLE Clients (
+    client_id NUMBER PRIMARY KEY,
+    client_name VARCHAR2(100)
+);
+
+CREATE TABLE Orders (
+    order_id NUMBER PRIMARY KEY,
+    client_id NUMBER,
+    order_date DATE,
+    status VARCHAR2(50),
+    total_amount NUMBER(10,2),
+    FOREIGN KEY (client_id) REFERENCES Clients(client_id)
+);
+
+- Создаем функцию для расчета суммы выполненных заказов за период
+CREATE OR REPLACE FUNCTION calculate_client_orders_total(
+    p_client_id IN NUMBER,
+    p_start_date IN DATE,
+    p_end_date IN DATE
+) RETURN NUMBER
+IS
+    v_total_amount NUMBER(10,2) := 0;
+BEGIN
+    - Суммируем заказы с статусом 'Исполнен' за указанный период
+    SELECT NVL(SUM(total_amount), 0)
+    INTO v_total_amount
+    FROM Orders
+    WHERE client_id = p_client_id
+      AND status = 'Исполнен'
+      AND order_date BETWEEN p_start_date AND p_end_date;
+    
+    RETURN v_total_amount;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20001, 
+            'Ошибка при расчете суммы заказов: '  SQLERRM);
+END calculate_client_orders_total;
+/
+
+- Пример использования функции
+DECLARE
+    v_total NUMBER;
+BEGIN
+    - Вызов функции для клиента с ID=1 за период с 01.01.2023 по 31.12.2023
+    v_total := calculate_client_orders_total(
+        p_client_id => 1,
+        p_start_date => DATE '2023-01-01',
+        p_end_date => DATE '2023-12-31'
+    );
+    
+    DBMS_OUTPUT.PUT_LINE('Общая сумма выполненных заказов: '  v_total);
+END;
+/
+
+- Тестовые данные
+INSERT INTO Clients (client_id, client_name) VALUES (1, 'ООО "Рога и копыта"');
+INSERT INTO Clients (client_id, client_name) VALUES (2, 'ИП Сидоров');
+
+INSERT INTO Orders (order_id, client_id, order_date, status, total_amount) 
+VALUES (1, 1, DATE '2023-05-15', 'Исполнен', 15000);
+
+INSERT INTO Orders (order_id, client_id, order_date, status, total_amount) 
+VALUES (2, 1, DATE '2023-06-20', 'Исполнен', 25000);
+
+INSERT INTO Orders (order_id, client_id, order_date, status, total_amount) 
+VALUES (3, 1, DATE '2023-07-10', 'В обработке', 10000);
+
+INSERT INTO Orders (order_id, client_id, order_date, status, total_amount) 
+VALUES (4, 2, DATE '2023-08-05', 'Исполнен', 18000);
+
+- Тестируем функцию
+SELECT 
+    client_id,
+    calculate_client_orders_total(
+        client_id, 
+        DATE '2023-01-01', 
+        DATE '2023-12-31'
+    ) as total_orders_amount
+FROM Clients;
