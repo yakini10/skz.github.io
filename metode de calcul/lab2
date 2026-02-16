@@ -12,7 +12,7 @@ int main() {
 			if (c == 0)
 				cout << "infinite de solution";
 			else
-				cout << "aucune solution";
+				cout << "aucune solution dans R";
 		}
 		else {
 			double x = -c / b;
@@ -28,7 +28,15 @@ int main() {
 	}
 	double D = b * b - 4 * a * c;
 	if (D < 0) {
-		cout << "Solution impossible en R" << endl;
+		double reel = -0.5 * (b / a);
+		double img = -0.5 * (sqrt(-D) / a);
+		cout << "x1 = " << reel << img << "i" << endl;
+		cout << "x2 = " << reel << img << "i" << endl;;
+	}
+	else if (D == 0) {
+		double x = -0.5 * (b / a);
+		//double x = -b / 2 * a;
+		cout << "La double solution est x = " << x << endl;
 	}
 	else {
 		double q;
