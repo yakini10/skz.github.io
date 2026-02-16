@@ -1,0 +1,45 @@
+#include<iostream>
+#include<cmath>
+//#include<limits>
+using namespace std;
+
+int main() {
+	double a, b, c;
+	cout << "Entrez les valeurs de a, b et c : ";
+	cin >> a >> b >> c;
+	if (a == 0) {
+		if (b == 0) {
+			if (c == 0)
+				cout << "infinite de solution";
+			else
+				cout << "aucune solution";
+		}
+		else {
+			double x = -c / b;
+			cout << "La solution est: x = " << x << endl;
+		}
+		return 0;
+	}
+	double evite = max({ abs(a),abs(b),abs(c) });
+	if (evite != 0) {
+		a /= evite;
+		b /= evite;
+		c /= evite;
+	}
+	double D = b * b - 4 * a * c;
+	if (D < 0) {
+		cout << "Solution impossible en R" << endl;
+	}
+	else {
+		double q;
+		if (b >= 0) {
+			q = -0.5 * (b + sqrt(D));
+		}
+		else
+			q = -0.5 * (b - sqrt(D));
+		double x1 = q / a;
+		double x2 = c / q;
+		cout << "Les solutions sont : x1 = " << x1 << " et x2 = " << x2 << endl;
+		return 0;
+	}
+}
