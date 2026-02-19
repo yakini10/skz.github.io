@@ -58,3 +58,90 @@ public class Book {
     }
 
 }
+
+
+
+
+#include<iostream>
+#include<vector>
+#include<random>
+#include<fstream>
+#include<cmath>
+#include<iomanip>
+using namespace std;
+
+const short BLANC = 0;
+const short NOIR = 1;
+const int MAX_n = 1000;
+const int MIN_n = 100;
+const int PAS = 100;
+const int exp_n = 10;
+struct ImageRect {
+	int x1, y1;
+	int x2, y2;
+};
+short** Picture = nullptr;
+int current_n=0;
+long long operations = 0;
+void allouerPhoto(int n) {
+	if (Picture != nullptr) {
+		for (int i = 0; i <= current_n; i++) {
+			delete[] Picture;
+		}
+		current_n = n;
+	}
+	Picture = new short* [n];
+	for (int i = 0; i < n; i++) {
+		Picture[i] = new short[n];
+	}
+	current_n = n;
+}
+void initBlanc(int n) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			Picture[i][j] = BLANC;
+		}
+	}
+}
+void F(int x, int y, int taille) {
+	for (int i = 0; i < taille; i++) {
+		int px = x + i;
+		int py = y;
+		if (px >= 0 && px < current_n && py >= 0 && py < current_n) {
+			Picture[px][py] = NOIR;
+		}
+	}
+	for (int i = 0; i < taille; i++) {
+		int px = x + taille - 1;
+		int py = y + i;
+		if (px >= 0 && px < current_n && py >= 0 && py < current_n) {
+			Picture[px][py] = NOIR;
+		}
+	}
+}
+vector<ImageRect>S() {
+	vector<ImageRect>resultats;
+	operations = 0;
+	vector<vector<bool>>visite(current_n, vector<bool>(current_n, false));
+	for (int i = 0; i < current_n; i++) {
+		for (int j = 0; j < current_n; j++) {
+			operations = +2;
+			if (Picture[i][j] == NOIR && !visite[i][j]) {
+				operations++;
+				int x_min = i, x_max = i, y_min = j, y_max = j;
+				vector<pair<int, int>>pile;
+				pile.push_back({ i,j });
+				visite[i][j] = true;
+				while (!pile.empty()) {
+					operations++;
+					//auto [] = pile.back();
+					pile.pop_back;
+				}
+			}
+		}
+
+	}
+}
+int main() {
+	
+}
