@@ -1,101 +1,222 @@
-#include<iostream>
-#include<vector>
-#include<cmath>
-#include<cstdlib>
-#include<ctime>
+#include <iostream>
+#include <vector>
+#include <iomanip>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
 using namespace std;
 
-const short BLANC = 0;
-const short NOIR = 1;
-short** Picture;
-int n;
-struct BoundingBox {
-	int x1, y1, x2, y2;
-};
-void creerLettreL(int x, int y, int largeur, int hauteur) {
-	if (x < 0 || y < 0 || x + largeur >= n || y + hauteur >= n) {
-		cout << "Erreur : image depasse les limites" << endl;
-		return;
-	}
-	for (int i = x; i <= x + largeur; i++) {
-		Picture[y + hauteur][i] = NOIR;
-	}
-	for (int j = y; j <= y + hauteur; j++) {
-		Picture[j][x] = NOIR;
-	}
-}
-struct CompteurOperations {
-	long long comparaisons;
-	long long additions;
-	long long multiplications;
-	long long divisions;
-	CompteurOperations():comparaisons(0),additions(0),multiplications(0),divisions(0){}
-	void reset() {
-		comparaisons = 0;
-		additions = 0;
-		multiplications = 0;
-		divisions = 0;
-	}
-	void afficher() {
-		cout << "Operations effectues : " << endl;
-		cout << "Comparaisons: " << comparaisons << endl;
-		cout << "Additions: " << additions << endl;
-		cout << "Multiplications: " << multiplications << endl;
-		cout << "Total: " << (comparaisons + additions + multiplications + divisions)<<endl;
-	}
-};
-vector<BoundingBox>rechercherLettreL(int largeurMin, int largeurMax, int hauteurMin,int hauteurMax, CompteurOperations& compteur) {
-	vector<BoundingBox>resultats;
-	for (int y = 0; y < n; y++) {
-		compteur.additions++;
-		for (int x = 0; x < n; x++) {
-			compteur.additions++;
-			for (int largeur = largeurMin; largeur <= largeurMax; largeur++) {
-				compteur.additions++;
-				compteur.comparaisons++;
-				for (int hauteur = hauteurMin; hauteur <= hauteurMax; hauteur++) {
-					compteur.additions++;
-					compteur.comparaisons++;
-					compteur.comparaisons += 2;
-					if (x + largeur < n && y + hauteur < n) {
-						bool trouve = true;
-						for (int i = x; i < x + largeur; i++) {
-							compteur.additions++;
-							compteur.comparaisons++;
-							compteur.comparaisons++;
-							if (Picture[y + hauteur][i] != NOIR) {
-								trouve = false;
-								break;
-							}
-						}
-						if (trouve) {
-							for (int j = y; j < y + hauteur; j++) {
-								compteur.additions++;
-								compteur.comparaisons++;
-								compteur.comparaisons++;
-								if (Picture[j][x]!= NOIR) {
-									trouve = false;
-									break;
-								}
-							}
-						}
-						compteur.comparaisons++;
-						if (trouve) {
-							BoundingBox bb;
-							bb.x1 = x;
-							bb.y1 = y;
-							bb.x2 = x + largeur;
-							bb.y2 = y + hauteur;
-							resultats.push_back(bb);
-						}
-					}
-				}
-			}
-		}
-	}
-	return resultats;
+const int MAXN = 1100;
+short Picture[MAXN][MAXN];
+
+long long operations = 0;
+
+//////////////////////////////////////////////////////////////////
+// Nettoyer l'image
+//////////////////////////////////////////////////////////////////
+
+void clearPicture(int n)
+{
+    for(int i=0;i<n;i++)
+        for(int j=0;j<n;j++)
+            Picture[i][j]=0;
 }
 
-int main() {
-	
+//////////////////////////////////////////////////////////////////
+// F : dessiner une image L
+//////////////////////////////////////////////////////////////////
+
+void F(int n,int x,int y,int h,int w)
+{
+    // segment vertical
+    for(int i=0;i<h;i++)
+        Picture[x+i][y]=1;
+
+    // segment horizontal
+    for(int j=0;j<w;j++)
+        Picture[x+h-1][y+j]=1;
+}
+
+//////////////////////////////////////////////////////////////////
+// S : recherche des images L
+//////////////////////////////////////////////////////////////////
+
+void S(int n)
+{
+    operations = 0;
+
+    bool found=false;
+
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<n;j++)
+        {
+            operations++;
+
+            if(Picture[i][j]==1)
+            {
+                int h=0;
+                int w=0;
+
+                // mesurer segment vertical
+                while(i+h<n && Picture[i+h][j]==1)
+                {
+                    operations++;
+                    h++;
+                }
+
+                // mesurer segment horizontal
+                while(j+w<n && Picture[i+h-1][j+w]==1)
+                {
+                    operations++;
+                    w++;
+                }
+
+                if(h>1 && w>1)
+                {
+                    found=true;
+
+                    cout<<"Image L trouvee : ";
+                    cout<<"("<<i<<","<<j<<") -> ";
+                    cout<<"("<<i+h-1<<","<<j+w-1<<")"<<endl;
+                }
+            }
+        }
+    }
+
+    if(!found)
+        cout<<"ne contient pas l'image"<<endl;
+}
+
+//////////////////////////////////////////////////////////////////
+// P1 : programme de test
+//////////////////////////////////////////////////////////////////
+
+void P1()
+{
+    cout<<"\n===== TEST P1 =====\n";
+
+    int n=50;
+
+    clearPicture(n);
+
+    F(n,5,5,10,6);
+    F(n,20,10,12,7);
+    F(n,30,30,8,5);
+
+    S(n);
+}
+
+//////////////////////////////////////////////////////////////////
+// P2 : mesure de complexité
+//////////////////////////////////////////////////////////////////
+
+void P2()
+{
+    cout<<"\n===== P2 : COMPLEXITE =====\n";
+
+    srand(time(0));
+
+    vector<int> tailles;
+    vector<double> temps_moyens;
+
+    int experiments = 20;
+
+    for(int n=100;n<=1000;n+=100)
+    {
+        double total=0;
+
+        for(int k=0;k<experiments;k++)
+        {
+            clearPicture(n);
+
+            int nbImages = rand()%5 + 1;
+
+            for(int i=0;i<nbImages;i++)
+            {
+                int x = rand()%(n-20);
+                int y = rand()%(n-20);
+
+                int h = rand()%10 + 5;
+                int w = rand()%10 + 5;
+
+                F(n,x,y,h,w);
+            }
+
+            S(n);
+
+            total += operations;
+        }
+
+        double moyenne = total/experiments;
+
+        tailles.push_back(n);
+        temps_moyens.push_back(moyenne);
+
+        cout<<"n="<<n<<"  T(n)="<<moyenne<<endl;
+    }
+
+//////////////////////////////////////////////////////////////////
+// Methode des coefficients indetermines
+//////////////////////////////////////////////////////////////////
+
+    double n0 = tailles[0];
+    double n1 = tailles[1];
+    double n2 = tailles[2];
+    double n3 = tailles[3];
+
+    double y0 = temps_moyens[0];
+    double y1 = temps_moyens[1];
+    double y2 = temps_moyens[2];
+    double y3 = temps_moyens[3];
+
+    double k3 =
+    (y3 - 3*y2 + 3*y1 - y0) /
+    (n3*n3*n3 - 3*n2*n2*n2 + 3*n1*n1*n1 - n0*n0*n0);
+
+    double k2 = 0;
+    double k1 = 0;
+    double k0 = y0;
+
+//////////////////////////////////////////////////////////////////
+// Affichage formule
+//////////////////////////////////////////////////////////////////
+
+    cout<<"\n=== FORMULE TROUVEE ===\n";
+
+    cout<<"T(n) = "
+        <<k3<<" n^3 + "
+        <<k2<<" n^2 + "
+        <<k1<<" n + "
+        <<k0<<endl;
+
+//////////////////////////////////////////////////////////////////
+// CSV pour graphique
+//////////////////////////////////////////////////////////////////
+
+    cout<<"\n=== DONNEES CSV ===\n";
+    cout<<"n,T(n)\n";
+
+    for(int i=0;i<tailles.size();i++)
+    {
+        cout<<tailles[i]<<","<<temps_moyens[i]<<endl;
+    }
+
+}
+
+//////////////////////////////////////////////////////////////////
+// MAIN
+//////////////////////////////////////////////////////////////////
+
+int main()
+{
+    cout<<"LABORATOIRE : RECHERCHE D'IMAGES L\n";
+    cout<<"===================================\n";
+
+    P1();
+
+    P2();
+
+    return 0;
 }
