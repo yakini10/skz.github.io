@@ -1,0 +1,101 @@
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<cstdlib>
+#include<ctime>
+using namespace std;
+
+const short BLANC = 0;
+const short NOIR = 1;
+short** Picture;
+int n;
+struct BoundingBox {
+	int x1, y1, x2, y2;
+};
+void creerLettreL(int x, int y, int largeur, int hauteur) {
+	if (x < 0 || y < 0 || x + largeur >= n || y + hauteur >= n) {
+		cout << "Erreur : image depasse les limites" << endl;
+		return;
+	}
+	for (int i = x; i <= x + largeur; i++) {
+		Picture[y + hauteur][i] = NOIR;
+	}
+	for (int j = y; j <= y + hauteur; j++) {
+		Picture[j][x] = NOIR;
+	}
+}
+struct CompteurOperations {
+	long long comparaisons;
+	long long additions;
+	long long multiplications;
+	long long divisions;
+	CompteurOperations():comparaisons(0),additions(0),multiplications(0),divisions(0){}
+	void reset() {
+		comparaisons = 0;
+		additions = 0;
+		multiplications = 0;
+		divisions = 0;
+	}
+	void afficher() {
+		cout << "Operations effectues : " << endl;
+		cout << "Comparaisons: " << comparaisons << endl;
+		cout << "Additions: " << additions << endl;
+		cout << "Multiplications: " << multiplications << endl;
+		cout << "Total: " << (comparaisons + additions + multiplications + divisions)<<endl;
+	}
+};
+vector<BoundingBox>rechercherLettreL(int largeurMin, int largeurMax, int hauteurMin,int hauteurMax, CompteurOperations& compteur) {
+	vector<BoundingBox>resultats;
+	for (int y = 0; y < n; y++) {
+		compteur.additions++;
+		for (int x = 0; x < n; x++) {
+			compteur.additions++;
+			for (int largeur = largeurMin; largeur <= largeurMax; largeur++) {
+				compteur.additions++;
+				compteur.comparaisons++;
+				for (int hauteur = hauteurMin; hauteur <= hauteurMax; hauteur++) {
+					compteur.additions++;
+					compteur.comparaisons++;
+					compteur.comparaisons += 2;
+					if (x + largeur < n && y + hauteur < n) {
+						bool trouve = true;
+						for (int i = x; i < x + largeur; i++) {
+							compteur.additions++;
+							compteur.comparaisons++;
+							compteur.comparaisons++;
+							if (Picture[y + hauteur][i] != NOIR) {
+								trouve = false;
+								break;
+							}
+						}
+						if (trouve) {
+							for (int j = y; j < y + hauteur; j++) {
+								compteur.additions++;
+								compteur.comparaisons++;
+								compteur.comparaisons++;
+								if (Picture[j][x]!= NOIR) {
+									trouve = false;
+									break;
+								}
+							}
+						}
+						compteur.comparaisons++;
+						if (trouve) {
+							BoundingBox bb;
+							bb.x1 = x;
+							bb.y1 = y;
+							bb.x2 = x + largeur;
+							bb.y2 = y + hauteur;
+							resultats.push_back(bb);
+						}
+					}
+				}
+			}
+		}
+	}
+	return resultats;
+}
+
+int main() {
+	
+}
