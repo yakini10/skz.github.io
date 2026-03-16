@@ -1,0 +1,101 @@
+```php
+<?php
+header('Content-Type: text/html; charset=UTF-8');
+
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+
+  $errors = [
+    'fio' => $_COOKIE['fio_error'] ?? '',
+    'phone' => $_COOKIE['phone_error'] ?? '',
+    'email' => $_COOKIE['email_error'] ?? ''
+  ];
+
+  $values = [
+    'fio' => $_COOKIE['fio_value'] ?? '',
+    'phone' => $_COOKIE['phone_value'] ?? '',
+    'email' => $_COOKIE['email_value'] ?? '',
+    'birth_date' => $_COOKIE['birth_value'] ?? '',
+    'biography' => $_COOKIE['bio_value'] ?? ''
+  ];
+
+  setcookie('fio_error','',100000);
+  setcookie('phone_error','',100000);
+  setcookie('email_error','',100000);
+
+  if (!empty($_GET['save'])) {
+    print('Спасибо, результаты сохранены.<br>');
+  }
+
+  include('form.php');
+  exit();
+}
+
+$errors = [];
+
+if (empty($_POST['fio'])) {
+  setcookie('fio_error','Введите ФИО',0);
+  $errors[] = TRUE;
+}
+elseif (!preg_match("/^[a-zA-Zа-яА-Я\s]+$/u", $_POST['fio'])) {
+  setcookie('fio_error','Допустимы только буквы',0);
+  $errors[] = TRUE;
+}
+
+if (empty($_POST['phone'])) {
+  setcookie('phone_error','Введите телефон',0);
+  $errors[] = TRUE;
+}
+elseif (!preg_match("/^\+?[0-9]{10,15}$/", $_POST['phone'])) {
+  setcookie('phone_error','Допустимы только цифры и +',0);
+  $errors[] = TRUE;
+}
+
+if (empty($_POST['email'])) {
+  setcookie('email_error','Введите email',0);
+  $errors[] = TRUE;
+}
+elseif (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+  setcookie('email_error','Некорректный email',0);
+  $errors[] = TRUE;
+}
+
+setcookie('fio_value', $_POST['fio'], time()+365*24*60*60);
+setcookie('phone_value', $_POST['phone'], time()+365*24*60*60);
+setcookie('email_value', $_POST['email'], time()+365*24*60*60);
+setcookie('birth_value', $_POST['birth_date'], time()+365*24*60*60);
+setcookie('bio_value', $_POST['biography'], time()+365*24*60*60);
+
+if (!empty($errors)) {
+  header('Location: index.php');
+  exit();
+}
+
+$user = 'uXXXXX';
+$pass = 'password';
+$db = new PDO('mysql:host=localhost;dbname=uXXXXX', $user, $pass,
+  [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+$stmt = $db->prepare("INSERT INTO application (fio, phone, email, birth_date, gender, biography, contract_accepted) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+$stmt->execute([
+  $_POST['fio'],
+  $_POST['phone'],
+  $_POST['email'],
+  $_POST['birth_date'],
+  $_POST['gender'],
+  $_POST['biography'],
+  isset($_POST['contract_accepted']) ? 1 : 0
+]);
+
+$app_id = $db->lastInsertId();
+
+$stmt = $db->prepare("INSERT INTO application_languages (application_id, language_id) VALUES (?, ?)");
+
+foreach ($_POST['languages'] as $lang) {
+  $stmt->execute([$app_id, $lang]);
+}
+
+header('Location: ?save=1');
+exit();
+?>
+```
