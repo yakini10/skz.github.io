@@ -51,3 +51,10 @@ int main() {
 		return 0;
 	}
 }
+Je dois chercher a comprendre si cette partie interfere dans la bonne execution du code
+double evite = max({ abs(a),abs(b),abs(c) });
+	if (evite != 0) {
+		a /= evite;
+		b /= evite;
+		c /= evite;
+	} 
