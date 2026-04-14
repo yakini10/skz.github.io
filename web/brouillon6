@@ -27,6 +27,790 @@
 нормальной форме. Хранение языков в отдельной таблице предпочительнее так как 
 проще подсчитать статистику одним запросом или добавить язык без изменения 
 структуры БД.
+voici le code donné par le prof pour completer l'exo et les trois autres proviennent de l'exo precedent voici le index.php <?php
+session_start();
+header('Content-Type: text/html; charset=UTF-8');
+
+$user = 'u82383';
+$pass = 'dt54#FDrt';
+
+try {
+    $db = new PDO('mysql:host=localhost;dbname=u82383', $user, $pass,
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+} catch (PDOException $e) {
+    die("Ошибка БД");
+}
+
+$messages = [];
+$errors = [];
+$values = [];
+
+// ================= LOGOUT =================
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: login.php');
+    exit();
+}
+
+// ================= LOGIN =================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['auth'])) {
+
+    $stmt = $db->prepare("SELECT * FROM users WHERE login=?");
+    $stmt->execute([$_POST['login']]);
+    $userData = $stmt->fetch();
+
+    if ($userData && password_verify($_POST['password'], $userData['password_hash'])) {
+        $_SESSION['user_id'] = $userData['id'];
+        $_SESSION['application_id'] = $userData['application_id'];
+        header('Location: index.php');
+        exit();
+    } else {
+        $messages[] = "<div class='error'>Неверный логин или пароль</div>";
+        include('login.php');
+        exit();
+    }
+}
+
+// ================= GET =================
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+
+    // SUCCESS
+    if (!empty($_COOKIE['save'])) {
+        setcookie('save', '', time() - 3600);
+        $messages[] = '<div class="success">Спасибо, результаты сохранены.</div>';
+    }
+
+    // LOGIN/PASSWORD SHOW ONCE (только если не авторизован)
+    if (!empty($_COOKIE['login']) && empty($_SESSION['user_id'])) {
+        $messages[] = "<div class='success'>
+            Логин: " . htmlspecialchars($_COOKIE['login']) . "<br>
+            Пароль: " . htmlspecialchars($_COOKIE['password']) . "
+        </div>";
+
+        setcookie('login', '', time() - 3600);
+        setcookie('password', '', time() - 3600);
+    }
+
+    // ERRORS (cookies)
+    $error_fields = ['fio','phone','email','birth_date','gender','languages','biography','contract_accepted'];
+
+    foreach ($error_fields as $field) {
+        if (!empty($_COOKIE[$field . '_error'])) {
+            $errors[$field] = true;
+
+            $messages[] = '<div class="error">' .
+                htmlspecialchars($_COOKIE[$field . '_error_msg']) .
+                '</div>';
+
+            setcookie($field . '_error', '', time() - 3600);
+            setcookie($field . '_error_msg', '', time() - 3600);
+        }
+    }
+
+    // VALUES FROM COOKIES (значения по умолчанию)
+    $values['fio'] = $_COOKIE['fio_value'] ?? '';
+    $values['phone'] = $_COOKIE['phone_value'] ?? '';
+    $values['email'] = $_COOKIE['email_value'] ?? '';
+    $values['birth_date'] = $_COOKIE['birth_date_value'] ?? '';
+    $values['gender'] = $_COOKIE['gender_value'] ?? '';
+    $values['biography'] = $_COOKIE['biography_value'] ?? '';
+    $values['contract_accepted'] = ($_COOKIE['contract_accepted_value'] ?? '') === 'yes';
+    $values['languages'] = !empty($_COOKIE['languages_value'])
+        ? explode(',', $_COOKIE['languages_value'])
+        : [];
+
+    // IF AUTHORIZED → DB PRIORITY (приоритет базы данных)
+    if (!empty($_SESSION['application_id'])) {
+        $stmt = $db->prepare("SELECT * FROM application WHERE id=?");
+        $stmt->execute([$_SESSION['application_id']]);
+        $dbValues = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($dbValues) {
+            // Объединяем: данные из БД имеют приоритет
+            $values = array_merge($values, $dbValues);
+        }
+
+        $stmt = $db->prepare("SELECT language_id FROM application_languages WHERE application_id=?");
+        $stmt->execute([$_SESSION['application_id']]);
+        $values['languages'] = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    include('form.php');
+    exit();
+}
+
+// ================= POST =================
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['auth'])) {
+
+    $has_errors = false;
+
+    // ===== VALIDATION + COOKIES =====
+
+    function setError($field, $msg) {
+        setcookie($field.'_error', '1', time()+3600);
+        setcookie($field.'_error_msg', $msg, time()+3600);
+    }
+
+    // FIO
+    if (empty($_POST['fio'])) {
+        $has_errors = true;
+        setError('fio','Введите ФИО');
+    }
+    setcookie('fio_value', $_POST['fio'] ?? '', time()+365*24*3600);
+
+    // PHONE
+    if (empty($_POST['phone'])) {
+        $has_errors = true;
+        setError('phone','Введите телефон');
+    }
+    setcookie('phone_value', $_POST['phone'] ?? '', time()+365*24*3600);
+
+    // EMAIL
+    if (empty($_POST['email'])) {
+        $has_errors = true;
+        setError('email','Введите email');
+    }
+    setcookie('email_value', $_POST['email'] ?? '', time()+365*24*3600);
+
+    // DATE
+    if (empty($_POST['birth_date'])) {
+        $has_errors = true;
+        setError('birth_date','Введите дату');
+    }
+    setcookie('birth_date_value', $_POST['birth_date'] ?? '', time()+365*24*3600);
+
+    // GENDER
+    if (empty($_POST['gender'])) {
+        $has_errors = true;
+        setError('gender','Выберите пол');
+    }
+    setcookie('gender_value', $_POST['gender'] ?? '', time()+365*24*3600);
+
+    // LANGUAGES
+    if (empty($_POST['languages'])) {
+        $has_errors = true;
+        setError('languages','Выберите язык');
+    }
+    setcookie('languages_value', implode(',', $_POST['languages'] ?? []), time()+365*24*3600);
+
+    // BIO
+    if (empty($_POST['biography'])) {
+        $has_errors = true;
+        setError('biography','Введите биографию');
+    }
+    setcookie('biography_value', $_POST['biography'] ?? '', time()+365*24*3600);
+
+    // CONTRACT
+    if (empty($_POST['contract_accepted'])) {
+        $has_errors = true;
+        setError('contract_accepted','Подтвердите контракт');
+    }
+    setcookie('contract_accepted_value', isset($_POST['contract_accepted']) ? 'yes' : '', time()+365*24*3600);
+
+    if ($has_errors) {
+        header('Location: index.php');
+        exit();
+    }
+
+    // CLEAN ERRORS
+    $fields = ['fio','phone','email','birth_date','gender','languages','biography','contract_accepted'];
+    foreach ($fields as $f) {
+        setcookie($f.'_error','',time()-3600);
+        setcookie($f.'_error_msg','',time()-3600);
+    }
+
+    // ================= DB =================
+    $db->beginTransaction();
+
+    if (!empty($_SESSION['application_id'])) {
+
+        // UPDATE существующей записи
+        $stmt = $db->prepare("UPDATE application SET fio=?, phone=?, email=?, birth_date=?, gender=?, biography=?, contract_accepted=? WHERE id=?");
+        $stmt->execute([
+            $_POST['fio'],
+            $_POST['phone'],
+            $_POST['email'],
+            $_POST['birth_date'],
+            $_POST['gender'],
+            $_POST['biography'],
+            1,
+            $_SESSION['application_id']
+        ]);
+
+        $stmt = $db->prepare("DELETE FROM application_languages WHERE application_id=?");
+        $stmt->execute([$_SESSION['application_id']]);
+
+        foreach ($_POST['languages'] as $lang) {
+            $stmt = $db->prepare("INSERT INTO application_languages VALUES (?,?)");
+            $stmt->execute([$_SESSION['application_id'], $lang]);
+        }
+
+    } else {
+
+        // INSERT новой записи
+        $stmt = $db->prepare("INSERT INTO application (fio, phone, email, birth_date, gender, biography, contract_accepted) VALUES (?,?,?,?,?,?,?)");
+        $stmt->execute([
+            $_POST['fio'],
+            $_POST['phone'],
+            $_POST['email'],
+            $_POST['birth_date'],
+            $_POST['gender'],
+            $_POST['biography'],
+            1
+        ]);
+
+        $app_id = $db->lastInsertId();
+
+        foreach ($_POST['languages'] as $lang) {
+            $stmt = $db->prepare("INSERT INTO application_languages VALUES (?,?)");
+            $stmt->execute([$app_id, $lang]);
+        }
+
+        // ===== GENERATE LOGIN =====
+        $login = 'user' . rand(1000, 9999);
+        $password = bin2hex(random_bytes(4));
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $db->prepare("INSERT INTO users (login, password_hash, application_id) VALUES (?,?,?)");
+        $stmt->execute([$login, $hash, $app_id]);
+
+        setcookie('login', $login, time()+3600);
+        setcookie('password', $password, time()+3600);
+    }
+
+    $db->commit();
+
+    setcookie('save', '1', time()+3600);
+    header('Location: index.php');
+    exit();
+}
+?> le form.php             <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анкета</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        /* Header авторизации */
+        .auth-header {
+            text-align: right;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .auth-status {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: #f44336;
+            color: white;
+            text-decoration: none;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group.error-group {
+            background-color: #fff0f0;
+            border-left: 4px solid #f44336;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        label.required::after {
+            content: " *";
+            color: #f44336;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input.error,
+        textarea.error,
+        select.error {
+            border-color: #f44336;
+            background-color: #fff0f0;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        select[multiple] {
+            min-height: 150px;
+        }
+
+        select[multiple] option {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        select[multiple] option:hover {
+            background: #667eea20;
+        }
+
+        small {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .auth-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header avec statut d'autorisation -->
+    <div class="auth-header">
+        <?php if (!empty($_SESSION['user_id'])): ?>
+            <span class="auth-status"> Вы авторизованы</span>
+            <a href="index.php?logout=1" class="logout-btn"> Выйти</a>
+        <?php else: ?>
+            <a href="login.php" class="logout-btn" style="background: #667eea;"> Войти</a>
+        <?php endif; ?>
+    </div>
+
+    <h1> Анкета</h1>
+
+    <!-- Affichage des messages -->
+    <?php if (!empty($messages)): ?>
+        <?php foreach ($messages as $message): ?>
+            <?php echo $message; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <form action="index.php" method="POST">
+        <!-- ФИО -->
+        <div class="form-group <?php echo isset($errors['fio']) ? 'error-group' : ''; ?>">
+            <label for="fio" class="required">ФИО</label>
+            <input type="text" id="fio" name="fio" value="<?php echo htmlspecialchars($values['fio'] ?? ''); ?>" placeholder="Иванов Иван Иванович" class="<?php echo isset($errors['fio']) ? 'error' : ''; ?>">
+        </div>
+
+        <!-- Телефон -->
+        <div class="form-group <?php echo isset($errors['phone']) ? 'error-group' : ''; ?>">
+            <label for="phone" class="required">Телефон</label>
+            <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($values['phone'] ?? ''); ?>" placeholder="+7 (XXX) XXX-XX-XX" class="<?php echo isset($errors['phone']) ? 'error' : ''; ?>">
+        </div>
+
+        <!-- Email -->
+        <div class="form-group <?php echo isset($errors['email']) ? 'error-group' : ''; ?>">
+            <label for="email" class="required">E-mail</label>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($values['email'] ?? ''); ?>" placeholder="example@domain.com" class="<?php echo isset($errors['email']) ? 'error' : ''; ?>">
+        </div>
+
+        <!-- Дата рождения -->
+        <div class="form-group <?php echo isset($errors['birth_date']) ? 'error-group' : ''; ?>">
+            <label for="birth_date" class="required">Дата рождения</label>
+            <input type="date" id="birth_date" name="birth_date" value="<?php echo htmlspecialchars($values['birth_date'] ?? ''); ?>" class="<?php echo isset($errors['birth_date']) ? 'error' : ''; ?>">
+        </div>
+
+        <!-- Пол -->
+        <div class="form-group <?php echo isset($errors['gender']) ? 'error-group' : ''; ?>">
+            <label class="required">Пол</label>
+            <div class="radio-group">
+                <label><input type="radio" name="gender" value="male" <?php echo (($values['gender'] ?? '') == 'male') ? 'checked' : ''; ?>> Мужской</label>
+                <label><input type="radio" name="gender" value="female" <?php echo (($values['gender'] ?? '') == 'female') ? 'checked' : ''; ?>> Женский</label>
+            </div>
+        </div>
+
+        <!-- Языки -->
+        <div class="form-group <?php echo isset($errors['languages']) ? 'error-group' : ''; ?>">
+            <label for="languages" class="required">Любимый язык программирования</label>
+            <select name="languages[]" id="languages" multiple size="6" class="<?php echo isset($errors['languages']) ? 'error' : ''; ?>">
+                <?php
+                $langs = [
+                    1=>'Pascal',2=>'C',3=>'C++',4=>'JavaScript',5=>'PHP',6=>'Python',
+                    7=>'Java',8=>'Haskel',9=>'Clojure',10=>'Prolog',11=>'Scala',12=>'Go'
+                ];
+                foreach($langs as $id=>$name){
+                    $sel = in_array($id, $values['languages'] ?? []) ? 'selected' : '';
+                    echo "<option value='$id' $sel>$name</option>";
+                }
+                ?>
+            </select>
+            <small> Удерживайте Ctrl (или Cmd) для выбора нескольких вариантов</small>
+        </div>
+
+        <!-- Биография -->
+        <div class="form-group <?php echo isset($errors['biography']) ? 'error-group' : ''; ?>">
+            <label for="biography" class="required">Биография</label>
+            <textarea id="biography" name="biography" rows="5" placeholder="Расскажите немного о себе..." class="<?php echo isset($errors['biography']) ? 'error' : ''; ?>"><?php echo htmlspecialchars($values['biography'] ?? ''); ?></textarea>
+        </div>
+
+        <!-- Контракт -->
+        <div class="form-group <?php echo isset($errors['contract_accepted']) ? 'error-group' : ''; ?>">
+            <div class="checkbox-group">
+                <input type="checkbox" id="contract_accepted" name="contract_accepted" value="yes" <?php echo ($values['contract_accepted'] ?? false) ? 'checked' : ''; ?>>
+                <label for="contract_accepted" class="required">С контрактом ознакомлен(а)</label>
+            </div>
+        </div>
+
+        <button type="submit"> Сохранить</button>
+    </form>
+</div>
+</body>
+</html>  et le login.php   <?php
+session_start();
+
+// Если уже авторизован, перенаправляем на форму
+if (!empty($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
+
+$messages = [];
+
+// Обработка сообщений об ошибках из index.php
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['auth'])) {
+    // Сообщения об ошибках будут переданы через сессию или обработаны в index.php
+    // Этот блок в основном для отображения ошибок, переданных из index.php
+}
+
+// Получаем сообщения из cookies (если есть)
+if (!empty($_COOKIE['login_error'])) {
+    $messages[] = htmlspecialchars($_COOKIE['login_error']);
+    setcookie('login_error', '', time() - 3600);
+}
+?>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 400px;
+            max-width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background-color: #f44336;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Вход в систему</h1>
+
+        <?php if (!empty($messages)): ?>
+            <?php foreach ($messages as $msg): ?>
+                <div class="error"><?php echo $msg; ?></div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <form action="index.php" method="POST">
+            <div class="form-group">
+                <label for="login">Логин</label>
+                <input type="text" id="login" name="login" placeholder="Введите ваш логин" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" placeholder="Введите ваш пароль" required>
+            </div>
+            
+            <input type="hidden" name="auth" value="1">
+            
+            <button type="submit">Войти</button>
+        </form>
+        
+        <div class="info">
+            <p>После регистрации вы получите логин и пароль.<br>
+            <a href="index.php">Вернуться к форме регистрации</a></p>
+        </div>
+    </div>
+</body>
+</html>   Avec ces elements peux tu m'aider a resoudre cet exo stp
+
 Соблюдение DRY означает отсутствие дублирования в коде, например вынос 
 соединения с БД, валидации и обновления данных в отдельные модули и функции. 
 Структурируйте код, используя модули и функции, либо воспользуйтесь готовой 
