@@ -23,3 +23,30 @@ db.emp.insert({"empno" : 7900, "ename" : " James","job" : "CLERK","mgr" : 7698, 
 db.emp.insert({"empno" : 7934, "ename" : " Miller","job" : "CLERK","mgr" : 7782, "hiredate" : "1982-01-23","sal" : 1300, "comm" : null, "deptno" : 10})
 > db.emp.find( {} )
 > db.dept.find( {} )
+
+
+
+db.emp.aggregate([
+  {
+    $group: {
+      _id: null,
+      avgSal: { $avg: "$sal" }
+    }
+  },
+  {
+    $lookup: {
+      from: "emp",
+      pipeline: [
+        {
+          $match: {
+            $expr: { $gt: ["$sal", "$$avg"] }
+          }
+        }
+      ],
+      let: { avg: "$avgSal" },
+      as: "result"
+    }
+  },
+  { $unwind: "$result" },
+  { $replaceRoot: { newRoot: "$result" } }
+])
