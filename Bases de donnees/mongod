@@ -25,7 +25,7 @@ db.emp.insert({"empno" : 7934, "ename" : " Miller","job" : "CLERK","mgr" : 7782,
 > db.dept.find( {} )
 
 
-
+//employes gagnant plus que la moyenne
 db.emp.aggregate([
   {
     $group: {
@@ -50,3 +50,5 @@ db.emp.aggregate([
   { $unwind: "$result" },
   { $replaceRoot: { newRoot: "$result" } }
 ])
+
+//employes gagnat plus que leur manager
