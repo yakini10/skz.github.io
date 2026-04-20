@@ -38,3 +38,138 @@ int main()
 	}
 	return 0;
 }
+
+
+//1
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+double fact(int n) {
+    double f = 1.0;
+    for (int i = 1; i <= n; i++)
+        f *= i;
+    return f;
+}
+double erf_naive(double x) {
+    double sum = 0.0;
+    double PI = acos(-1);
+    for (int n = 0; n < 200; n++) {
+        double term = pow(-1, n) * pow(x, 2 * n + 1);
+        term /= (fact(n) * (2 * n + 1));
+
+        sum += term;
+    }
+
+    return (2.0 / sqrt(PI)) * sum;
+}
+
+int main() {
+    double values[] = { 0.5, 1.0, 5.0, 10.0 };
+
+    cout << scientific << setprecision(10);
+
+    for (double x : values) {
+        double approx = erf_naive(x);
+        double exact = erf(x);
+
+        double abs_err = fabs(approx - exact);
+        double rel_err = abs_err / fabs(exact);
+
+        cout << "" << endl;
+        cout << "x = " << x << endl;
+        cout << "--------------------------------------" << endl;
+        cout << "Approximation : " << approx << endl;
+        cout << "Valeur exacte : " << exact << endl;
+        cout << "Erreur absolue: " << abs_err << endl;
+        cout << "Erreur relative: " << rel_err << endl;
+        cout << "______________________________________" << endl << endl;
+    }
+
+    return 0;
+}
+
+
+//2
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+
+double s_calculer(double x) {
+    double sum = 0.0;
+    int k = 1;
+
+    while (true) {
+        double a = sqrt(pow(k, 3) + x);
+        double b = sqrt(pow(k, 3) - x);
+
+        double term = (-2.0 * x) / ((a + b) * a * b);
+
+        if (sum + term == sum)
+            break;
+
+        sum += term;
+        k++;
+    }
+
+    return sum;
+}
+
+int main() {
+    cout << scientific << setprecision(10);
+
+    double x1 = 0.5;
+    double x2 = 0.999999999;
+
+    cout << "\n x = 0.5 " << endl;
+    cout << "s(x) = " << s_calculer(x1) << endl;
+
+    cout << "\n x = 0.999999999 " << endl;
+    cout << "s(x) = " << s_calculer(x2) << endl;
+
+    return 0;
+}
+
+//3
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+using namespace std;
+double somme_acceleree(int Nmax) {
+    double PI = acos(-1);
+    const double pi_carre_divisee_6 = PI * PI / 6.0;
+    double somme = 0.0;
+
+    for (int n = 1; n <= Nmax; n++) {
+        double terme = 1.0 / (n * n * (n * n + 1.0));
+        somme += terme;
+    }
+
+    return pi_carre_divisee_6 - somme;
+}
+
+double somme_originale_lente(int N) {
+    double somme = 0.0;
+    for (int n = 1; n <= N; n++) {
+        somme += 1.0 / (n * n + 1.0);
+    }
+    return somme;
+}
+
+int main() {
+    cout << setprecision(15) << fixed;
+
+    cout << " Methode acceleree \n";
+    int N_acc = 1500; 
+    double resultat_acc = somme_acceleree(N_acc);
+    cout << "S = " << resultat_acc << " (avec " << N_acc << " termes)\n\n";
+
+    cout << " Verification avec methode originale (N=10^7) \n";
+    int N_orig = 10000000;
+    double resultat_orig = somme_originale_lente(N_orig);
+    cout << "S = " << resultat_orig << " (avec " << N_orig << " termes)\n";
+    cout << "Difference entre les deux methodes : "<< scientific << abs(resultat_acc - resultat_orig) << "\n";
+
+    return 0;
+}
