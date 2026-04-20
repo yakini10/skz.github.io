@@ -52,3 +52,27 @@ db.emp.aggregate([
 ])
 
 //employes gagnat plus que leur manager
+db.emp.aggregate([
+  {
+    $lookup: {
+      from: "emp",
+      localField: "mgr",
+      foreignField: "empno",
+      as: "manager"
+    }
+  },
+  { $unwind: "$manager" },
+  {
+    $match: {
+      $expr: { $gt: ["$sal", "$manager.sal"] }
+    }
+  },
+  {
+    $project: {
+      ename: 1,
+      sal: 1,
+      manager_name: "$manager.ename",
+      manager_sal: "$manager.sal"
+    }
+  }
+])
