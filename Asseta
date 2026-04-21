@@ -1,0 +1,182 @@
+<mxfile host="app.diagrams.net" modified="2025-04-21T00:00:00.000Z" agent="5.0" etag="..." version="22.1.0">
+  <diagram name="Sequence_Rendez_Vous" id="sequence_rv">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Acteurs / objets (rectangles) -->
+        <mxCell id="patient" value="Пациент" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="interface" value="Интерфейс" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="40" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="controleur" value="Контроллер\nрасписания" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="400" y="40" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="bdd" value="База данных" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="580" y="40" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tickets" value="Контроллер\nталонов" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="760" y="40" width="100" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Lignes de vie verticales (lignes pointillées) -->
+        <mxCell id="line_patient" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=1;fillColor=none;" edge="1" parent="1" source="patient" target="patient">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="90" y="80" as="sourcePoint" />
+            <mxPoint x="90" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="line_interface" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=1;" edge="1" parent="1" source="interface" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="270" y="80" as="sourcePoint" />
+            <mxPoint x="270" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="line_controleur" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=1;" edge="1" parent="1" source="controleur" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="80" as="sourcePoint" />
+            <mxPoint x="450" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="line_bdd" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=1;" edge="1" parent="1" source="bdd" target="bdd">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="630" y="80" as="sourcePoint" />
+            <mxPoint x="630" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="line_tickets" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=1;" edge="1" parent="1" source="tickets" target="tickets">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="810" y="80" as="sourcePoint" />
+            <mxPoint x="810" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Flèches de messages -->
+        <mxCell id="msg1" value="Ввести специальность и дату" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0;exitX=1;exitY=0.5;" edge="1" parent="1" source="patient" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="140" y="110" as="sourcePoint" />
+            <mxPoint x="220" y="110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg2" value="поискСвободныхТалонов()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="interface" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="150" as="sourcePoint" />
+            <mxPoint x="400" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg3" value="SQL SELECT" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="bdd">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="190" as="sourcePoint" />
+            <mxPoint x="580" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg4" value="список талонов" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="bdd" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="630" y="230" as="sourcePoint" />
+            <mxPoint x="500" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg5" value="показатьСписок()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="270" as="sourcePoint" />
+            <mxPoint x="320" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg6" value="Показать выбор" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="interface" target="patient">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="270" y="310" as="sourcePoint" />
+            <mxPoint x="140" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg7" value="Выбрать талон" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="patient" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="140" y="350" as="sourcePoint" />
+            <mxPoint x="270" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg8" value="забронироватьТалон()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="interface" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="390" as="sourcePoint" />
+            <mxPoint x="450" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg9" value="проверитьДоступность()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="tickets">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="430" as="sourcePoint" />
+            <mxPoint x="760" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg10" value="OK" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="tickets" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="810" y="470" as="sourcePoint" />
+            <mxPoint x="500" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg11" value="update статус 'Забронирован'" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="bdd">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="510" as="sourcePoint" />
+            <mxPoint x="630" y="510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg12" value="OK" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="bdd" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="630" y="550" as="sourcePoint" />
+            <mxPoint x="500" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg13" value="запроситьПодтверждение()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="590" as="sourcePoint" />
+            <mxPoint x="320" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg14" value="Подтвердите запись?" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="interface" target="patient">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="270" y="630" as="sourcePoint" />
+            <mxPoint x="140" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg15" value="Да" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="patient" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="140" y="670" as="sourcePoint" />
+            <mxPoint x="270" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg16" value="подтвердитьОкончательно()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="interface" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="710" as="sourcePoint" />
+            <mxPoint x="450" y="710" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg17" value="update статус 'Подтверждён'" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="bdd">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="750" as="sourcePoint" />
+            <mxPoint x="630" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg18" value="OK" style="endArrow=classic;html=1;rounded=0;dashed=1;" edge="1" parent="1" source="bdd" target="controleur">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="630" y="790" as="sourcePoint" />
+            <mxPoint x="500" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg19" value="показатьТалон()" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="controleur" target="interface">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="830" as="sourcePoint" />
+            <mxPoint x="320" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg20" value="Детали приёма" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1" source="interface" target="patient">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="270" y="870" as="sourcePoint" />
+            <mxPoint x="140" y="870" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
