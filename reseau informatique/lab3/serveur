@@ -1,0 +1,112 @@
+#include <windows.h>
+#include <iostream>
+#include <winsock2.h>
+#include <string>
+#pragma comment(lib,"Ws2_32.lib")
+
+using namespace std;
+
+u_short MY_PORT = 666;
+
+#define PRINTNUSERS \
+if (nclients) { \
+    cout << " user on-line " << nclients << endl; \
+} else cout << "No User on line\n";
+
+DWORD WINAPI ConToClient(LPVOID client_socket);
+
+int nclients = 0;
+
+int main()
+{
+    char buff[1024];
+    cout << "TCP SERVER DEMO\n";
+
+    if (WSAStartup(0x0202, (WSADATA*)&buff[0]))
+    {
+        cout << "Error WSAStartup\n" << WSAGetLastError();
+        return -1;
+    }
+
+    SOCKET mysocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (mysocket == INVALID_SOCKET)
+    {
+        cout << "Error socket\n" << WSAGetLastError();
+        WSACleanup();
+        return -1;
+    }
+
+    sockaddr_in local_addr;
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_port = htons(MY_PORT);
+    local_addr.sin_addr.s_addr = 0;
+
+    if (bind(mysocket, (sockaddr*)&local_addr, sizeof(local_addr)))
+    {
+        cout << "Error bind\n" << WSAGetLastError();
+        closesocket(mysocket);
+        WSACleanup();
+        return -1;
+    }
+
+    if (listen(mysocket, 0x100))
+    {
+        cout << "Error listen\n" << WSAGetLastError();
+        closesocket(mysocket);
+        WSACleanup();
+        return -1;
+    }
+
+    cout << "Waiting connections...\n";
+
+    SOCKET client_socket;
+    sockaddr_in client_addr;
+    int client_addr_size = sizeof(client_addr);
+
+    while ((client_socket = accept(mysocket, (sockaddr*)&client_addr, &client_addr_size)) != INVALID_SOCKET)
+    {
+        nclients++;
+
+        cout << "+new connect!\n";
+        cout << inet_ntoa(client_addr.sin_addr) << endl;
+        PRINTNUSERS
+
+            SOCKET* pclient = new SOCKET;
+        *pclient = client_socket;
+
+        DWORD thID;
+        CreateThread(NULL, 0, ConToClient, pclient, 0, &thID);
+    }
+
+    closesocket(mysocket);
+    WSACleanup();
+    return 0;
+}
+
+DWORD WINAPI ConToClient(LPVOID client_socket)
+{
+    SOCKET my_sock = *(SOCKET*)client_socket;
+    delete (SOCKET*)client_socket;
+
+    char buff[1024];
+    int len;
+
+    char sHELLO[] = "Hello, Student\r\n";
+    send(my_sock, sHELLO, sizeof(sHELLO), 0);
+
+    while ((len = recv(my_sock, buff, sizeof(buff) - 1, 0)) > 0)
+    {
+        buff[len] = '\0';
+        cout << "received: " << buff << endl;
+
+        send(my_sock, buff, len, 0);
+    }
+
+    nclients--;
+    cout << "-disconnect\n";
+    PRINTNUSERS
+
+        closesocket(my_sock);
+    return 0;
+}
