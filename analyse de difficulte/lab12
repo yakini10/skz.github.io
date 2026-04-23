@@ -1,0 +1,70 @@
+#include <iostream>
+#include<vector>
+#include<algorithm>
+#include<chrono>
+
+using namespace std;
+
+long long operations = 0;
+bool checklesomorphism(const vector<vector<int>>& A, const vector<vector<int>>& B, const vector<int>& perm) {
+    int n = A.size();
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            operations++;
+            if (A[i][j] != B[perm[i]][perm[j]]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+bool arelsomorphic(const vector<vector<int>>& A, const vector<vector<int>>& B) {
+    int n = A.size();
+    vector<int>perm(n);
+    for (int i = 0; i < n; i++) perm[i] = i;
+    do {
+        if (checklesomorphism(A, B, perm)) {
+            return true;
+        }
+    } while (next_permutation(perm.begin(), perm.end()));
+}
+
+int main()
+{
+    int n;
+    cout << "Entrez la taille de la matrice: " << endl;
+    cin >> n;
+    vector<vector<int>>A(n, vector<int>(n));
+    vector<vector<int>>B(n, vector<int>(n));
+    cout << "Entrez les valeurs de la matrice A:" << endl;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            cin >> A[i][j];
+    cout << "Entrez les valeurs de la matrice B:" << endl;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            cin >> B[i][j];
+    auto start = chrono::high_resolution_clock::now();
+    bool result = arelsomorphic(A, B);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double>duration = end - start;
+    if (result)
+        cout << "Les graphes sont isomorphes" << endl;
+    else
+        cout << "Les graphes ne sont pas isomorphes" << endl;
+    cout << "Le nombre d'operations est : " << operations << endl;
+    cout << "Duree de l'execution : " << duration.count() << "secondes" << endl;
+
+    /*cout << "Je vivais dans mon village bien tranquilement mais tout a basculer si brusquemnt je suis devenue "
+         << "princesse du jour au lendemain, quel changement de destin nouvelle famille : princesse Sofia" << endl;
+    cout <<"Traverser toute la maison esquive des filles en chemin pour atteindre a temps la salle de bain chez les loud "
+         <<"enjamber du linge en tas des couches qui ne sentent pas tres bon, "
+         <<"un garcon doit tout faire pour garder la raison Bienvenue chez les loud "
+         <<"Tout se bouscule ou freine, nous c'est comme ca qu'on s'aime, Bienvenue chez les loud"
+         <<" Un gars dix filles mais je l'adore ma grande famille "
+         <<"Bien ve nue chez les loud , po po "
+         << endl;*/
+    return 0;
+}
+
+
