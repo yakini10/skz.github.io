@@ -1,0 +1,76 @@
+-- =============================================
+-- 1. Table des langages de programmation
+-- =============================================
+CREATE TABLE IF NOT EXISTS languages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Insertion des 12 langages
+INSERT INTO languages (id, name) VALUES
+(1, 'Pascal'),
+(2, 'C'),
+(3, 'C++'),
+(4, 'JavaScript'),
+(5, 'PHP'),
+(6, 'Python'),
+(7, 'Java'),
+(8, 'Haskell'),
+(9, 'Clojure'),
+(10, 'Prolog'),
+(11, 'Scala'),
+(12, 'Go')
+ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+-- =============================================
+-- 2. Table des inscriptions (application)
+-- =============================================
+CREATE TABLE IF NOT EXISTS application (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    fio VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    birth_date DATE NOT NULL,
+    gender ENUM('male', 'female') NOT NULL,
+    biography TEXT NOT NULL,
+    contract_accepted TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- 3. Table de liaison (plusieurs-à-plusieurs)
+-- =============================================
+CREATE TABLE IF NOT EXISTS application_languages (
+    application_id INT NOT NULL,
+    language_id INT NOT NULL,
+    PRIMARY KEY (application_id, language_id),
+    FOREIGN KEY (application_id) REFERENCES application(id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE
+);
+
+-- =============================================
+-- 4. Table des utilisateurs (pour l'authentification)
+-- =============================================
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    login VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    application_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (application_id) REFERENCES application(id) ON DELETE CASCADE
+);
+
+-- =============================================
+-- 5. Table des administrateurs (NOUVEAU - pour admin.php)
+-- =============================================
+CREATE TABLE IF NOT EXISTS admin (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    login VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insertion de l'administrateur par défaut (login: admin, mot de passe: 123)
+INSERT INTO admin (login, password_hash) 
+VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash);
