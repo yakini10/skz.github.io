@@ -1,0 +1,67 @@
+-- Table 1 : Propriétaires
+CREATE TABLE proprietaires (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom VARCHAR(100) NOT NULL,
+    prenom VARCHAR(100) NOT NULL,
+    telephone VARCHAR(20),
+    email VARCHAR(100)
+);
+
+-- Table 2 : Maladies
+CREATE TABLE maladies (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom_maladie VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+-- Table 3 : Animaux
+CREATE TABLE animaux (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    age INT,
+    couleur VARCHAR(50),
+    id_proprietaire INT,
+    FOREIGN KEY (id_proprietaire) REFERENCES proprietaires(id) ON DELETE CASCADE
+);
+
+-- Table 4 : Visites (journal)
+CREATE TABLE visites (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_animal INT,
+    date_visite DATE NOT NULL,
+    symptomes TEXT,
+    id_maladie INT,
+    traitement TEXT,
+    FOREIGN KEY (id_animal) REFERENCES animaux(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_maladie) REFERENCES maladies(id)
+);
+-- Ajouter des propriétaires
+INSERT INTO proprietaires (nom, prenom, telephone, email) VALUES
+('Dupont', 'Jean', '0612345678', 'jean.dupont@email.com'),
+('Martin', 'Sophie', '0687654321', 'sophie.martin@email.com'),
+('Bernard', 'Pierre', '0745123456', 'pierre.bernard@email.com');
+
+-- Ajouter des maladies
+INSERT INTO maladies (nom_maladie, description) VALUES
+('Grippe canine', 'Fièvre, toux, écoulement nasal'),
+('Otite', 'Infection de l\'oreille, démangeaisons'),
+('Fracture', 'Os cassé suite à un accident'),
+('Piqûre de tique', 'Parasite externe, risque de maladie de Lyme');
+
+-- Ajouter des animaux
+INSERT INTO animaux (nom, type, age, couleur, id_proprietaire) VALUES
+('Rex', 'Chien', 5, 'Marron', 1),
+('Minette', 'Chat', 3, 'Blanche', 2),
+('Caramel', 'Lapin', 2, 'Roux', 1),
+('Max', 'Chien', 8, 'Noir', 3),
+('Plume', 'Oiseau', 1, 'Jaune', 2);
+
+-- Ajouter des visites
+INSERT INTO visites (id_animal, date_visite, symptomes, id_maladie, traitement) VALUES
+(1, '2025-04-15', 'Toux persistante et fièvre', 1, 'Antibiotiques et repos'),
+(2, '2025-04-20', 'Secoue la tête et gratte ses oreilles', 2, 'Gouttes auriculaires'),
+(1, '2025-05-01', 'Boite de la patte avant', 3, 'Attelle et anti-inflammatoires'),
+(3, '2025-05-05', 'Perte d\'appétit et fatigue', 4, 'Antiparasitaire externe'),
+(4, '2025-05-10', 'Toux sèche', 1, 'Sirop et repos'),
+(2, '2025-05-12', 'Vérification oreilles', 2, 'Nettoyage et contrôle');
