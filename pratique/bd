@@ -65,3 +65,30 @@ INSERT INTO visites (id_animal, date_visite, symptomes, id_maladie, traitement) 
 (3, '2025-05-05', 'Perte d\'appétit et fatigue', 4, 'Antiparasitaire externe'),
 (4, '2025-05-10', 'Toux sèche', 1, 'Sirop et repos'),
 (2, '2025-05-12', 'Vérification oreilles', 2, 'Nettoyage et contrôle');
+
+-- Version MINI (3 propriétaires, 4 maladies, 5 animaux, 6 visites)
+INSERT INTO proprietaires (nom, prenom, telephone, email) VALUES
+('Иванов', 'Иван', '0612345678', 'ivan@email.com'),
+('Петрова', 'Мария', '0687654321', 'maria@email.com'),
+('Сидоров', 'Алексей', '0745123456', 'alex@email.com');
+
+INSERT INTO maladies (nom_maladie, description) VALUES
+('Грипп', 'Кашель, температура'),
+('Отит', 'Боль в ушах'),
+('Перелом', 'Травма кости'),
+('Клещ', 'Паразит');
+
+INSERT INTO animaux (nom, type, age, couleur, id_proprietaire) VALUES
+('Рекс', 'Собака', 5, 'Коричневый', 1),
+('Мурка', 'Кошка', 3, 'Белая', 2),
+('Мармелад', 'Кролик', 2, 'Рыжий', 1),
+('Макс', 'Собака', 8, 'Чёрный', 3),
+('Перо', 'Птица', 1, 'Жёлтый', 2);
+
+INSERT INTO visites (id_animal, date_visite, symptomes, id_maladie, traitement) VALUES
+(1, '2025-04-15', 'Кашель', 1, 'Антибиотики'),
+(2, '2025-04-20', 'Чешет уши', 2, 'Капли'),
+(1, '2025-05-01', 'Хромает', 3, 'Шина'),
+(3, '2025-05-05', 'Слабость', 4, 'Лекарство'),
+(4, '2025-05-10', 'Кашель сухой', 1, 'Сироп'),
+(2, '2025-05-12', 'Проверка', 2, 'Чистка');
