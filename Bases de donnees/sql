@@ -78,3 +78,134 @@ begin
      -- remove extra  , at the beginning
      return  ltrim(v_employees,',');
 end;
+
+import psycopg2
+from psycopg2 import sql
+
+# Configuration de la connexion
+conn_params = {
+    'host': 'localhost',
+    'database': 'votre_base',
+    'user': 'votre_user',
+    'password': 'votre_mot_de_passe',
+    'port': 5432
+}
+
+def execute_plpgsql_block(connection, sql_block):
+    """Exécute un bloc PL/pgSQL"""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql_block)
+            connection.commit()
+            print("Exécution réussie")
+    except Exception as e:
+        connection.rollback()
+        print(f"Erreur: {e}")
+
+def call_function(connection, func_name, *args):
+    """Appelle une fonction PostgreSQL"""
+    try:
+        with connection.cursor() as cursor:
+            cursor.callfunc(func_name, str, args)
+            result = cursor.fetchone()[0]
+            return result
+    except Exception as e:
+        print(f"Erreur lors de l'appel de la fonction: {e}")
+        return None
+
+# Exemple d'utilisation
+def main():
+    # Connexion à PostgreSQL
+    conn = psycopg2.connect(**conn_params)
+    
+    try:
+        # 1. Exécuter le premier bloc
+        block1 = """
+        DO $$
+        DECLARE
+            empcur CURSOR FOR SELECT employee_id, first_name FROM employees;
+            emprec RECORD;
+            row_count INTEGER := 0;
+        BEGIN
+            FOR emprec IN empcur LOOP
+                row_count := row_count + 1;
+                IF row_count > 4 THEN
+                    RAISE NOTICE '%', emprec.first_name;
+                    EXIT WHEN row_count > 10;
+                END IF;
+            END LOOP;
+        END $$;
+        """
+        execute_plpgsql_block(conn, block1)
+        
+        # 2. Exécuter le deuxième bloc (avec capture des NOTICE)
+        conn.autocommit = False
+        with conn.cursor() as cursor:
+            # Configuration pour capturer les NOTICE
+            cursor.execute("SET client_min_messages TO 'notice'")
+            
+            block2 = """
+            DO $$
+            DECLARE
+                jobscur CURSOR FOR SELECT job_id, job_title FROM jobs;
+                jobrec RECORD;
+                v_name employees.first_name%TYPE;
+            BEGIN
+                FOR jobrec IN jobscur LOOP
+                    SELECT first_name INTO v_name
+                    FROM employees
+                    WHERE hire_date = (
+                        SELECT MIN(hire_date) 
+                        FROM employees 
+                        WHERE job_id = jobrec.job_id
+                    )
+                    AND job_id = jobrec.job_id
+                    LIMIT 1;
+                    
+                    RAISE NOTICE '% - %', jobrec.job_title, v_name;
+                END LOOP;
+            END $$;
+            """
+            cursor.execute(block2)
+            conn.commit()
+        
+        # 3. Exécuter la mise à jour des salaires
+        block3 = """
+        DO $$
+        DECLARE
+            emprec RECORD;
+            v_hike NUMERIC(2);
+        BEGIN
+            FOR emprec IN SELECT employee_id, department_id, commission_pct FROM employees
+            LOOP
+                IF emprec.department_id = 40 THEN
+                    v_hike := 10;
+                ELSIF emprec.department_id = 70 THEN
+                    v_hike := 15;
+                ELSIF emprec.commission_pct > 0.30 THEN
+                    v_hike := 5;
+                ELSE
+                    v_hike := 10;
+                END IF;
+
+                UPDATE employees 
+                SET salary = salary + salary * v_hike/100 
+                WHERE employee_id = emprec.employee_id;
+            END LOOP;
+        END $$;
+        """
+        execute_plpgsql_block(conn, block3)
+        
+        # 4. Appeler la fonction
+        manager_id = 100  # Exemple d'ID manager
+        result = call_function(conn, 'get_employees_for_manager', manager_id)
+        if result:
+            print(f"Employés du manager {manager_id}: {result}")
+            
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    main()
+
+
