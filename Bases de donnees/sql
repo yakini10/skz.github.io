@@ -1,0 +1,80 @@
+declare
+
+     cursor empcur is
+        select employee_id, first_name 
+        from employees;
+        
+begin
+     for emprec  in empcur
+     loop
+         if empcur%rowcount > 4 then
+              dbms_output.put_line( emprec.first_name);
+              exit  when   empcur%rowcount > 10;
+         end if;
+     end loop;
+     
+end;
+
+
+
+
+
+
+Показать должность и имя сотрудника, который работает первый день.
+declare
+       cursor  jobscur is select  job_id, job_title from jobs;
+	   v_name  employees.first_name%type;
+begin
+       for jobrec in jobscur
+	   loop
+	         select first_name into v_name
+             from employees
+             where hire_date = ( select min(hire_date) from employees where job_id = jobrec.job_id)
+			 and  job_id = jobrec.job_id;
+             			 
+             dbms_output.put_line( jobrec.job_title || '-' || v_name); 						  
+	   end loop;
+end;
+Обновление зарплаты сотрудника в зависимости от отдела и процента комиссии. Если отдел - 40, увеличьте зарплату на 10%. Если отдел - 70, то на 15%, если комиссия больше 0,3%, то 5%, в противном случае 10%.
+declare
+    cursor empcur is
+     select employee_id, department_id, commission_pct
+     from employees;
+	 
+    v_hike  number(2);
+begin
+
+    for emprec in empcur
+    loop
+         if  emprec.department_id = 40 then
+              v_hike := 10;
+         elsif emprec.department_id = 70 then
+              v_hike := 15;
+         elsif emprec.commission_pct  > 0.30 then
+              v_hike := 5;
+         else
+              v_hike := 10;
+         end if;
+
+         update employees set salary = salary + salary * v_hike/100 
+         where employee_id = emprec.employee_id;
+         
+    end loop;
+end;
+Создайте функцию, которая принимает идентификатор менеджера и возвращает имена сотрудников, которые отчитываются перед этим менеджером. Имена должны быть возвращены в виде строки с запятыми, разделяющими имена.
+create or replace function get_employees_for_manager(manager number)
+return varchar2
+is
+   v_employees varchar2(1000) := '';
+   cursor empcur is
+      select  first_name from employees 
+      where   manager_id = manager;
+begin
+
+     for emprec in empcur
+     loop
+         v_employees :=  v_employees ||  ',' || emprec.first_name;
+     end loop;
+     -- remove extra  , at the beginning
+     return  ltrim(v_employees,',');
+end;
